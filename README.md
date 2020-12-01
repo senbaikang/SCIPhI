@@ -4,9 +4,9 @@
 
 A new option (--slt) has been added in order to only select candidate variant sites by employing the built-in likelihood ratio test in SCIPhI. The programme will automatically stop itself. 
 
-Recommend command line options for this modification to work:
+Recommended command line options for this modification to work:
 
-`path/to/sciphi --cwm 2 --lz 1 --slt on --in path/to/bam/file/names/list -o prefix/you/want path/to/input/mpileup`
+`path/to/sciphi --cwm 2 --slt on --in path/to/bam/file/names/list -o prefix/you/want path/to/input/mpileup`
 
 ## Description
 
