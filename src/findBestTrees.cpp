@@ -80,6 +80,10 @@ int readParameters(Config<TTreeType> & config, int argc, char* argv[]){
 	// configuration options
 	boost::program_options::options_description parseConfig("Configuration");
 	parseConfig.add_options()
+            // added options
+            ("slt", boost::program_options::value<decltype(config.selectCandidateVarSites)>(&config.selectCandidateVarSites), "Stop the programme after selecting candidate variant sites.")
+            // end added options
+
 		("in", boost::program_options::value<decltype(config.bamFileNames)>(&config.bamFileNames), "Name of the BAM files used to create the mpileup.")
 		("il", boost::program_options::value<decltype(config.loadName)>(&config.loadName), "Directory from which to read intermediate results.")
 		("ex", boost::program_options::value<decltype(config.exclusionFileName)>(&config.exclusionFileName), "File name of exclusion list (VCF format), containing loci which should be ignored.")
@@ -165,7 +169,13 @@ int readParameters(Config<TTreeType> & config, int argc, char* argv[]){
 	{
 		std::cerr << "ERROR: " << e.what() << '\n';
 		exit(EXIT_FAILURE);
-	} 
+	}
+
+    // sanity check (--slt and --il should not be specified at the same time)
+    if (config.selectCandidateVarSites && !config.loadName.empty()) {
+      std::cerr << "ERROR: --slt and --il should not be specified at the same time.\n";
+      exit(EXIT_FAILURE);
+    }
 
     if (global_options.count("-e"))
     {
@@ -214,6 +224,12 @@ int main(int argc, char* argv[])
         getData(config);
         createInitialTree(config);
         std::cout << "done!" << std::endl;
+
+        // if --slt is specified, stop the programme
+        if (config.selectCandidateVarSites) {
+          std::cout << "Find the pre-processed data in " << config.outFilePrefix + "/best_index/nuc.tsv" << std::endl;
+          exit(EXIT_SUCCESS);
+        }
     }
     else
     {

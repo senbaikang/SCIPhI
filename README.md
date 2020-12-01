@@ -1,5 +1,13 @@
 # SCIPhI
 
+## Modification
+
+A new option (--slt) has been added in order to only select candidate variant sites by employing the built-in likelihood ratio test in SCIPhI. The programme will automatically stop itself. 
+
+Recommend command line options for this modification to work:
+
+`path/to/sciphi --cwm 2 --lz 1 --slt on --in path/to/bam/file/names/list -o prefix/you/want path/to/input/mpileup`
+
 ## Description
 
 **Single-cell mutation identification via phylogenetic inference** (SCIPhI) is a new approach to mutation detection in individual tumor cells by leveraging the evolutionary relationship among cells. SCIPhI, jointly calls mutations in each individual cell and estimates the tumor phylogeny on these cells. Employing a Markov Chain Monte Carlo scheme we robustly account for the various sources of noise in single-cell sequencing data. Our approach enables us to reliably call mutations in each single cell even in experiments with high dropout rates and missing data

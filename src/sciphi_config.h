@@ -281,6 +281,10 @@ class Config{
     unsigned                                    sampling;
     bool                                        useNormalCellsInTree;
 
+    // added configurations
+    bool                                        selectCandidateVarSites;
+    // end added configurations
+
 
 	Config() :
         params{{TParamsTuple{100.0,100.0}, 
@@ -332,7 +336,11 @@ class Config{
         minCovNormalCell(5),
         maxNumberNormalCellMutated(0),
         sampling(0),
-        useNormalCellsInTree(false)
+        useNormalCellsInTree(false),
+
+        // added configurations
+        selectCandidateVarSites(false)
+        // end added configurations
     {};
 };
 
