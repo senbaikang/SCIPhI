@@ -60,7 +60,41 @@ std::ostream& operator<<(std::ostream & os, const GappedNoiseCounts & noiseCount
     for (unsigned i = 0; i < noiseCounts.covMinusSup.size(); ++i)
         os << "\t" << i<< ":" << noiseCounts.covMinusSup[i];
     return os;  
-}  
+}
+
+/**
+ * For each cell at each background site, m1, m2, and m3 should be in descending order.
+ */
+struct ContinuousNoiseCounts {
+  std::vector<uint64_t> m1{};
+  std::vector<uint64_t> m2{};
+  std::vector<uint64_t> m3{};
+  std::vector<uint64_t> ref{};
+  std::vector<uint64_t> cov{};
+
+public:
+  static void add(std::vector<uint64_t> & vec, unsigned val) {
+    if (val >= vec.size()) {
+      vec.resize(val + 1, 0);
+    }
+    vec[val]++;
+  }
+
+  /**
+   * Add each count to the corresponding vector.
+   * @param counts first three members are read counts of alternative nucleotides, the fourth is coverage
+   */
+  void add(std::array<unsigned, 4> counts) {
+    std::sort(counts.begin(), counts.end() - 1, std::greater<unsigned>());
+
+    add(this->m1, counts[0]);
+    add(this->m2, counts[1]);
+    add(this->m3, counts[2]);
+    add(this->cov, counts[3]);
+    add(this->ref, counts[3] - counts[0] - counts[1] - counts[2]);
+  }
+
+};
 
 struct NoiseCounts
 {
@@ -115,5 +149,55 @@ std::ostream& operator<<(std::ostream & os, const NoiseCounts & noiseCounts)
     for (unsigned i = 0; i < noiseCounts.covMinusSup.size(); ++i)
         os << "\t" << noiseCounts.covMinusSup[i].first << ":" << noiseCounts.covMinusSup[i].second;
     return os;  
-}  
+}
+
+/**
+ * An alternative format for NoiseCounts
+ */
+struct AltNoiseCounts {
+  std::vector<std::pair<uint32_t, uint64_t>> m1{};
+  std::vector<std::pair<uint32_t, uint64_t>> m2{};
+  std::vector<std::pair<uint32_t, uint64_t>> m3{};
+  std::vector<std::pair<uint32_t, uint64_t>> ref{};
+  std::vector<std::pair<uint32_t, uint64_t>> cov{};
+  uint64_t numPos{};
+
+public:
+  AltNoiseCounts() = default;
+
+  explicit AltNoiseCounts(const ContinuousNoiseCounts & continuousNoiseCounts) {
+    this->numPos = 0;
+    collectCounts(this->m1, continuousNoiseCounts.m1, nullptr);
+    collectCounts(this->m2, continuousNoiseCounts.m2, nullptr);
+    collectCounts(this->m3, continuousNoiseCounts.m3, nullptr);
+    collectCounts(this->ref, continuousNoiseCounts.ref, nullptr);
+    collectCounts(this->cov, continuousNoiseCounts.cov, &numPos);
+  }
+
+  static void collectCounts(std::vector<std::pair<uint32_t, uint64_t>> & vec, std::vector<uint64_t> val, uint64_t * const numPos) {
+    vec.resize(0);
+    for (size_t i = 0; i < val.size(); i++) {
+      if (val[i] > 0) {
+        vec.resize(vec.size() + 1, std::make_pair(i, val[i]));
+
+        if (numPos != nullptr) {
+          (*numPos) += val[i];
+        }
+      }
+    }
+  }
+
+};
+
+template <typename T, typename N>
+std::ostream & printNoiseCounts(std::ostream & out, const std::vector<std::pair<T, N>> & v) {
+  out << v[0].first << "," << v[0].second;
+
+  for (size_t i = 1; i < v.size(); i++) {
+    out << "\t" << v[i].first << "," << v[i].second;
+  }
+
+  return out;
+}
+
 #endif

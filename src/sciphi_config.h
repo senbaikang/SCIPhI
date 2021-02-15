@@ -282,7 +282,9 @@ class Config{
     bool                                        useNormalCellsInTree;
 
     // added configurations
+    AltNoiseCounts                              altNoiseCounts;
     bool                                        selectCandidateVarSites;
+    bool                                        saveInAltFormat;
     // end added configurations
 
 
@@ -339,7 +341,8 @@ class Config{
         useNormalCellsInTree(false),
 
         // added configurations
-        selectCandidateVarSites(false)
+        selectCandidateVarSites(false),
+        saveInAltFormat(false)
         // end added configurations
     {};
 };

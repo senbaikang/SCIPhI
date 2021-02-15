@@ -36,6 +36,7 @@
 #include "sciphi_config.h"
 #include "probabilities.h"
 #include "noise_counts.h"
+#include "cell_read_counts.h"
 
 #include <dlib/global_optimization.h>
 
@@ -802,6 +803,11 @@ bool readMpileupFile(Config<TTreeType> & config)
     typedef std::tuple<std::string, unsigned, char, char>                   TPositionInfo;
     typedef std::tuple<TPositionInfo, std::vector<TCountType>, long double> TDataEntry;
     typedef std::vector<TDataEntry>                                         TData;
+
+    // alternative format
+    typedef std::tuple<std::string, unsigned, char, std::vector<char>> TypePositionInfo;
+    typedef std::tuple<TypePositionInfo, std::vector<CellReadCounts>>  TypeDataEntry;
+    typedef std::vector<TypeDataEntry>                                 TypeData;
     
     // read the cellular information
     std::vector<unsigned> tumorCellPos;
@@ -830,6 +836,14 @@ bool readMpileupFile(Config<TTreeType> & config)
     auto incMap = readInclusionVCF(config.variantInclusionFileName);
 
     TData data;
+
+    // alternative data format
+    TypeData altData;
+    std::vector<CellReadCounts> cellCounts(numCells);
+    SignificantAltNucs significantAltNucs;
+    std::array<unsigned, 3> altNucs{};
+    unsigned altNucIdx{};
+    ContinuousNoiseCounts continuousNoiseCounts;
 
     std::array<unsigned, 5> normalBulkCounts;
     std::vector<std::array<unsigned, 5>> counts(numCells, {{0,0,0,0,0}});           // vector to hold the nucleotide information {a,c,g,t,coverage}
@@ -871,6 +885,9 @@ bool readMpileupFile(Config<TTreeType> & config)
 
     while (getline(inFileHeadBuff, currLine) || getline(inputStream, currLine))
     {
+        significantAltNucs.resetSigAltNucs();
+        altNucIdx = 0;
+
         // solit the current line into easily accessible chunks
         boost::split(splitVec, currLine, boost::is_any_of("\t"));
         // print the progress
@@ -915,6 +932,7 @@ bool readMpileupFile(Config<TTreeType> & config)
                 {
                     continue;
                 }
+                altNucs[altNucIdx++] = altAlleleIdx;
                 bool h0Wins = !applyFilterAcrossCells(filteredCounts, config, altAlleleIdx);
               
                 if(normalCellPos.size() > 0)
@@ -926,6 +944,7 @@ bool readMpileupFile(Config<TTreeType> & config)
                         {
                             positionMutated = true;
                             h0Wins = true;
+                            significantAltNucs.addSigAltNuc(SignificantAltNuc(altAlleleIdx, 1.0, 1.0));
                             continue;
                         }
                     }
@@ -949,6 +968,7 @@ bool readMpileupFile(Config<TTreeType> & config)
                             if (logH0Normal < logH1Normal) 
                             {
                                 positionMutated = true;
+                                significantAltNucs.addSigAltNuc(SignificantAltNuc(altAlleleIdx, 1.0, 1.0));;
                                 h0Wins = true;
                                 continue;
                             }
@@ -1039,6 +1059,7 @@ bool readMpileupFile(Config<TTreeType> & config)
 
                     if(pValue > 0.05 || startingPointMeanOverDis(0) >= config.meanFilter || incMap.count(std::make_tuple(splitVec[0], splitVec[1], splitVec[2], std::string(1, indexToChar(altAlleleIdx)))) != 0)
                     {
+                        significantAltNucs.addSigAltNuc(SignificantAltNuc(altAlleleIdx, startingPointMeanOverDis(0), pValue));
                         unsigned numAffectetCells = 0;
                         for (size_t cell = 0; cell < counts.size(); ++cell)
                         {
@@ -1065,15 +1086,62 @@ bool readMpileupFile(Config<TTreeType> & config)
             if(!positionMutated)
             {
                 addNoiseCounts(counts, gappedNoiseCounts);
+
+                for (size_t cell = 0; cell < numCells; cell++) {
+                    continuousNoiseCounts.add(
+                      std::array<unsigned, 4>{
+                      {counts[cell][altNucs[0]], counts[cell][altNucs[1]],
+                       counts[cell][altNucs[2]], counts[cell][4]}
+                      });
+                }
+
+            } else {
+              // sort significant alternative nucleotides
+              significantAltNucs.getOrderedSigAltNucs();
+
+              // collect read counts for each alternative nucleotide in each cell
+              for (size_t cell = 0; cell < numCells; cell++) {
+                  cellCounts[cell].setMembers(
+                    AltNucReadCount(altNucs[0], indexToChar(altNucs[0]), counts[cell][altNucs[0]], significantAltNucs),
+                    AltNucReadCount(altNucs[1], indexToChar(altNucs[1]), counts[cell][altNucs[1]], significantAltNucs),
+                    AltNucReadCount(altNucs[2], indexToChar(altNucs[2]), counts[cell][altNucs[2]], significantAltNucs),
+                    counts[cell][4]
+                    );
+
+                  cellCounts[cell].sortAltNucReadCounts();
+              }
+
+              // save the data
+              altData.push_back(
+                  TypeDataEntry(
+                      TypePositionInfo(
+                          splitVec[0],
+                          std::stoi(splitVec[1]),
+                          splitVec[2][0],
+                          significantAltNucs.convertAltNucsType(indexToChar)
+                          ),
+                      cellCounts
+                      )
+                  );
             }
         }
     }
 
     config.noiseCounts = NoiseCounts(gappedNoiseCounts);
+    config.altNoiseCounts = AltNoiseCounts(continuousNoiseCounts);
     computeNoiseScore(config);
 
     insertData(config, data);
-    writeNucInfo(config, config.bestName);
+
+    if (config.saveInAltFormat) {
+        writeAltNucInfo(
+          altData,
+          config,
+          config.bestName
+          );
+    } else {
+        writeNucInfo(config, config.bestName);
+    }
 
     return 0;
 }

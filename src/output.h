@@ -23,6 +23,7 @@
 
 #include "sciphi_config.h"
 #include "version.h"
+#include "cell_read_counts.h"
 
 #ifndef OUTPUT_H_
 #define OUTPUT_H_
@@ -336,6 +337,67 @@ void writeNucInfo(Config<SampleTree> const & config, std::string const & dir)
         outFile << "\n";
     }
     outFile.close();
+}
+
+void writeAltNucInfo(
+    std::vector<std::tuple<std::tuple<std::string, unsigned, char, std::vector<char>>, std::vector<CellReadCounts>>> const & data,
+    Config<SampleTree> const & config,
+    std::string const & dir
+    ) {
+  std::string mkdir = "mkdir -p " + dir;
+  std::system(mkdir.c_str());
+  std::ofstream out;
+  out.open(dir + "/readCounts.tsv");
+
+  out << "=numSamples=" << "\n";
+  out << config.getNumSamples() << "\n";
+
+  out << "=numCandidateMutatedSites=" << "\n";
+  out << data.size() << "\n";
+
+  out << "=numBackgroundSites=" << "\n";
+  out << (unsigned) (config.altNoiseCounts.numPos / config.getNumSamples()) << "\n";
+
+  out << "=mutations=" << "\n";
+  for (const auto & i : data) {
+    // chrom
+    out << std::get<0>(std::get<0>(i)) << "\t";
+
+    // pos
+    out << std::get<1>(std::get<0>(i)) << "\t";
+
+    // ref nuc
+    out << std::get<2>(std::get<0>(i)) << "\t";
+
+    // significant alt nucs
+    if (std::get<3>(std::get<0>(i)).empty()) {
+      out << "N";
+    } else {
+      for (size_t j = 0; j < std::get<3>(std::get<0>(i)).size(); j++) {
+        out << std::get<3>(std::get<0>(i))[j];
+
+        if (j < std::get<3>(std::get<0>(i)).size() - 1) {
+          out << ',';
+        }
+      }
+    }
+
+    // each cell
+    for (size_t j = 0 ; j < config.getNumSamples(); j++) {
+      out << "\t" << std::get<1>(i)[j];
+    }
+
+    out << "\n";
+  }
+
+  out << "=background=" << "\n";
+  printNoiseCounts(out, config.altNoiseCounts.m1) << "\n";
+  printNoiseCounts(out, config.altNoiseCounts.m2) << "\n";
+  printNoiseCounts(out, config.altNoiseCounts.m3) << "\n";
+  printNoiseCounts(out, config.altNoiseCounts.ref) << "\n";
+  printNoiseCounts(out, config.altNoiseCounts.cov) << "\n";
+
+  out.close();
 }
 
 void writeIndex(Config<SampleTree> const & config, std::string const & dir)

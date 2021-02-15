@@ -82,6 +82,7 @@ int readParameters(Config<TTreeType> & config, int argc, char* argv[]){
 	parseConfig.add_options()
             // added options
             ("slt", boost::program_options::value<decltype(config.selectCandidateVarSites)>(&config.selectCandidateVarSites), "Stop the programme after selecting candidate variant sites.")
+            ("af", boost::program_options::value<decltype(config.saveInAltFormat)>(&config.saveInAltFormat), "Save the candidate variant sites and reads in an alternative format.")
             // end added options
 
 		("in", boost::program_options::value<decltype(config.bamFileNames)>(&config.bamFileNames), "Name of the BAM files used to create the mpileup.")
@@ -227,8 +228,17 @@ int main(int argc, char* argv[])
 
         // if --slt is specified, stop the programme
         if (config.selectCandidateVarSites) {
-          std::cout << "Find the pre-processed data in " << config.outFilePrefix + "/best_index/nuc.tsv" << std::endl;
-          exit(EXIT_SUCCESS);
+            if (config.saveInAltFormat) {
+                std::cout << "Find the pre-processed data in "
+                          << config.outFilePrefix + "best_index/readCounts.tsv"
+                          << std::endl;
+            } else {
+                std::cout << "Find the pre-processed data in "
+                          << config.outFilePrefix + "best_index/nuc.tsv"
+                          << std::endl;
+            }
+
+            exit(EXIT_SUCCESS);
         }
     }
     else
