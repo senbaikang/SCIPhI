@@ -2,11 +2,13 @@
 
 ## Modification
 
-A new option (--slt) has been added in order to only select candidate variant sites by employing the built-in likelihood ratio test in SCIPhI. The programme will automatically stop itself. 
+1. Option *--slt* has been added in order to only select candidate variant sites by employing the built-in methods in SCIPhI. The programme will automatically stop itself. To activate this option, use `--slt on`.
+
+2. Option *--af*, representing 'alternative format', is added so that an alternative read counts format will be saved instead of the default one. To activate this option, use `--af on`.
 
 Recommended command line options for this modification to work:
 
-`path/to/sciphi --cwm 2 --slt on --in path/to/bam/file/names/list -o prefix/you/want path/to/input/mpileup`
+`/path/to/sciphi --cwm 2 --slt on --af on --in /path/to/bam/file/names/list -o /prefix/you/want /path/to/input/mpileup`
 
 ## Description
 
