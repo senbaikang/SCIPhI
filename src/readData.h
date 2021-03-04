@@ -844,6 +844,7 @@ bool readMpileupFile(Config<TTreeType> & config)
     std::array<unsigned, 3> altNucs{};
     unsigned altNucIdx{};
     ContinuousNoiseCounts continuousNoiseCounts;
+    bool hasSignificantAltNucs;
 
     std::array<unsigned, 5> normalBulkCounts;
     std::vector<std::array<unsigned, 5>> counts(numCells, {{0,0,0,0,0}});           // vector to hold the nucleotide information {a,c,g,t,coverage}
@@ -887,6 +888,7 @@ bool readMpileupFile(Config<TTreeType> & config)
     {
         significantAltNucs.resetSigAltNucs();
         altNucIdx = 0;
+        hasSignificantAltNucs = false;
 
         // solit the current line into easily accessible chunks
         boost::split(splitVec, currLine, boost::is_any_of("\t"));
@@ -1059,6 +1061,7 @@ bool readMpileupFile(Config<TTreeType> & config)
 
                     if(pValue > 0.05 || startingPointMeanOverDis(0) >= config.meanFilter || incMap.count(std::make_tuple(splitVec[0], splitVec[1], splitVec[2], std::string(1, indexToChar(altAlleleIdx)))) != 0)
                     {
+                        hasSignificantAltNucs = true;
                         significantAltNucs.addSigAltNuc(SignificantAltNuc(altAlleleIdx, startingPointMeanOverDis(0), pValue));
                         unsigned numAffectetCells = 0;
                         for (size_t cell = 0; cell < counts.size(); ++cell)
@@ -1083,6 +1086,7 @@ bool readMpileupFile(Config<TTreeType> & config)
                     }
                 }
             }
+
             if(!positionMutated)
             {
                 addNoiseCounts(counts, gappedNoiseCounts);
@@ -1095,7 +1099,11 @@ bool readMpileupFile(Config<TTreeType> & config)
                       });
                 }
 
-            } else {
+            }
+
+            // only treat the site as a candidate snv if it contains significant alternative nucleotides
+            if (hasSignificantAltNucs)
+            {
               // sort significant alternative nucleotides
               significantAltNucs.getOrderedSigAltNucs();
 
