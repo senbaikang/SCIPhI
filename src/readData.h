@@ -946,7 +946,6 @@ bool readMpileupFile(Config<TTreeType> & config)
                         {
                             positionMutated = true;
                             h0Wins = true;
-                            significantAltNucs.addSigAltNuc(SignificantAltNuc(altAlleleIdx, 1.0, 1.0));
                             continue;
                         }
                     }
@@ -970,7 +969,6 @@ bool readMpileupFile(Config<TTreeType> & config)
                             if (logH0Normal < logH1Normal) 
                             {
                                 positionMutated = true;
-                                significantAltNucs.addSigAltNuc(SignificantAltNuc(altAlleleIdx, 1.0, 1.0));;
                                 h0Wins = true;
                                 continue;
                             }
