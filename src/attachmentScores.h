@@ -135,11 +135,11 @@ struct AttachmentScore{
         if (N > 3)
         {
             // this check is necessary as there is not always a mix score available to be added
-            if(!isnan(rightSide.mixWildScore())) 
+            if(!std::isnan(rightSide.mixWildScore())) 
             {
                 this->mixWildScore() += rightSide.mixWildScore();
             }
-            if(!isnan(rightSide.mixHomScore()))
+            if(!std::isnan(rightSide.mixHomScore()))
             {
                 this->mixHomScore() += rightSide.mixHomScore();
             }
@@ -155,11 +155,11 @@ struct AttachmentScore{
         if (N > 3)
         {
             // this check is necessary as there is not always a mix score available to be added
-            if(!isnan(rightSide.mixWildScore()))
+            if(!std::isnan(rightSide.mixWildScore()))
             {
                 this->mixWildScore() += rightSide.mixWildScore();
             }
-            if(!isnan(rightSide.mixHomScore()))
+            if(!std::isnan(rightSide.mixHomScore()))
             {
                 this->mixHomScore() += rightSide.mixHomScore();
             }
@@ -176,11 +176,11 @@ struct AttachmentScore{
         if (N > 3)
         {
             // this check is necessary as there is not always a mix score available to be added
-            if(!isnan(rightSide.mixWildScore()))
+            if(!std::isnan(rightSide.mixWildScore()))
             {
                 this->mixWildScore() -= rightSide.mixWildScore();
             }
-            if(!isnan(rightSide.mixHomScore()))
+            if(!std::isnan(rightSide.mixHomScore()))
             {
                 this->mixHomScore() -= rightSide.mixHomScore();
             }
@@ -213,11 +213,11 @@ struct AttachmentScore{
         this->homScore() = addLogProb(this->homScore(), rightSide.homScore());
         if (N > 3)
         {
-            if(!isnan(rightSide.mixWildScore()))
+            if(!std::isnan(rightSide.mixWildScore()))
             {
                 this->mixWildScore() = addLogProb(this->mixWildScore(), rightSide.mixWildScore());
             }
-            if(!isnan(rightSide.mixHomScore()))
+            if(!std::isnan(rightSide.mixHomScore()))
             {
                 this->mixHomScore() = addLogProb(this->mixHomScore(), rightSide.mixHomScore());
             }
@@ -253,7 +253,7 @@ struct AttachmentScore{
         // this is currently alwas true as the mixture is still experimental
         // combine the hetero and the homozygous score
         if (!useMixture || 
-                isnan(this->mixWildScore()))
+                std::isnan(this->mixWildScore()))
         {
             this->finalScore() = addLogProbWeight(this->hetScore() - std::log(numNodes * 2 + 1), this->homScore() - std::log(numNodes), nu);
             return;
@@ -539,7 +539,7 @@ struct AttachmentScores
             result = homScoreLeft + hetScoreRight;
             
             // if the is a mixture score in the inner node add the mixture score
-            if (!isnan(mixHomScoreLeft))
+            if (!std::isnan(mixHomScoreLeft))
             {
                 result = addLogProb(result, mixHomScoreLeft + hetScoreRight);
             }
@@ -555,7 +555,7 @@ struct AttachmentScores
             result = homScoreRight + hetScoreLeft;
             
             // if the is a mixture score in the inner node add the mixture score
-            if (!isnan(mixHomScoreRight))
+            if (!std::isnan(mixHomScoreRight))
             {
                 result = addLogProb(result, mixHomScoreRight + hetScoreLeft);
             }
@@ -566,11 +566,11 @@ struct AttachmentScores
         // if both children are inner nodes proceed similar to above
         result = homScoreLeft + hetScoreRight;
         result = addLogProb(result, homScoreRight + hetScoreLeft);
-        if (!isnan(mixHomScoreLeft))
+        if (!std::isnan(mixHomScoreLeft))
         {
             result = addLogProb(result, mixHomScoreLeft + hetScoreRight);
         }
-        if (!isnan(mixHomScoreRight))
+        if (!std::isnan(mixHomScoreRight))
         {
             result = addLogProb(result, mixHomScoreRight + hetScoreLeft);
         }
@@ -601,7 +601,7 @@ struct AttachmentScores
         if (innerNodeLeft && !innerNodeRight)
         {
             result = hetScoreRight;
-            if (!isnan(mixWildScoreLeft))
+            if (!std::isnan(mixWildScoreLeft))
             {
                 result = addLogProb(result, mixWildScoreLeft + hetScoreRight);
             }
@@ -612,7 +612,7 @@ struct AttachmentScores
         if (!innerNodeLeft && innerNodeRight)
         {
             result = hetScoreLeft;
-            if (!isnan(mixWildScoreRight))
+            if (!std::isnan(mixWildScoreRight))
             {
                 result = addLogProb(result, mixWildScoreRight + hetScoreLeft);
             }
@@ -621,11 +621,11 @@ struct AttachmentScores
         }
 
         result = addLogProb(hetScoreLeft, hetScoreRight);
-        if (!isnan(mixWildScoreLeft))
+        if (!std::isnan(mixWildScoreLeft))
         {
             result = addLogProb(result, mixWildScoreLeft + hetScoreRight);
         }
-        if (!isnan(mixWildScoreRight))
+        if (!std::isnan(mixWildScoreRight))
         {
             result = addLogProb(result, mixWildScoreRight + hetScoreLeft);
         }
